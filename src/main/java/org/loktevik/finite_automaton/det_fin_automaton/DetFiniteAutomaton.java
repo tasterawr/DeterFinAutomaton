@@ -1,13 +1,16 @@
+package org.loktevik.finite_automaton.det_fin_automaton;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-public class MainClass {
+public class DetFiniteAutomaton {
     public static int numOfStates;
     public static List<String> alphabet = new ArrayList<>();
     public static int [][] transFunc;
@@ -56,26 +59,24 @@ public class MainClass {
     }
 
     public static void prepareData() throws IOException {
-        String alphabetString = "a b c d e f g h i j k l m n o p q r s t u v w x y z";
-        String[] fullAlphabet = alphabetString.split(" ");
-        String automateNum = "s2";
+        String automateNum = "s1";
 
-        Path path = Paths.get("src/main/resources/transactionFunctions.txt");
+        Path path = Paths.get("src/main/resources/DetAuto_transactionFunctions.txt");
         BufferedReader reader = Files.newBufferedReader(path);
         String line = "";
         while (!line.equals(automateNum)){
             line = reader.readLine();
         }
+
+        alphabet = Arrays.asList(reader.readLine().split(" "));
         String[] params = reader.readLine().split(" ");
 
         //число состояний (множество)
         numOfStates = Integer.parseInt(params[0]);
 
         //алфавит
-        int alphabetLength = Integer.parseInt(params[1]);
-        for (int i=0; i< alphabetLength;i++){
-            alphabet.add(fullAlphabet[i]);
-        }
+        int alphabetLength = alphabet.size();
+
         //матрица переходов
         transFunc = new int[numOfStates][alphabetLength]; //размерность массива функции переходов
         for (int i=0; i < numOfStates; i++){
