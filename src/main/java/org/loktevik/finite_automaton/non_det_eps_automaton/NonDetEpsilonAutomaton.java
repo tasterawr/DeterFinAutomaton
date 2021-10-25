@@ -1,6 +1,8 @@
 package org.loktevik.finite_automaton.non_det_eps_automaton;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,18 +24,25 @@ public class NonDetEpsilonAutomaton {
             System.out.println(e.getMessage());
         }
 
-        System.out.print("Алфавит: ");
-        for (String s : alphabet) {
-            System.out.print(s + " ");
+        while(true) {
+            System.out.print("Алфавит: ");
+            for (String s : alphabet) {
+                if (s.equals("eps"))
+                    System.out.print("| " + s);
+                else
+                    System.out.print(s + " ");
+            }
+
+
+            System.out.println("\nВведите строку на вход автомата: ");
+            Scanner scanner = new Scanner(System.in);
+            String input = scanner.nextLine();
+            List<Integer> startStateList = Arrays.asList(startState);
+            startAutomate(startStateList, input.split(""), 0, new HashSet<>());
         }
-        System.out.println("\nВведите строку на вход автомата: ");
-        Scanner scanner = new Scanner(System.in);
-        String input = scanner.nextLine();
-        List<Integer> startStateList = Arrays.asList(startState);
-        startAutomate(startStateList, input.split(""), 0, new HashSet<>());
     }
 
-    public static void startAutomate(List<Integer> currentStateList, String [] inputSymbols, int inputIndex, Set<Integer> endStateList){
+    public static void startAutomate(List<Integer> currentStateList, String [] inputSymbols, int inputIndex, Set<Integer> endStateList) {
         if (currentStateList.size() == 0){
             return;
         }
@@ -63,15 +72,37 @@ public class NonDetEpsilonAutomaton {
             }
         }
 
-        if (result){
-            System.out.println("Строка принята.");
+        System.out.print("Заключительные состояния: ");
+        for (int state : endStateList)
+            System.out.print(state + " ");
+        System.out.println();
+
+        try{
+            BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/output.txt"));
+            for (String s : inputSymbols){
+                writer.write(s);
+            }
+
+
+            if (result){
+                System.out.println("Строка принята.\n");
+                writer.write(": Строка принята.\n");
+            }
+            else{
+                System.out.println("Строка отвергнута.\n");
+                writer.write(": Строка отвергнута.\n");
+            }
+
+
+            writer.close();
         }
-        else
-            System.out.println("Строка отвергнута.");
+        catch (IOException e){
+
+        }
     }
 
     public static void prepareData() throws IOException {
-        String automateNum = "s2";
+        String automateNum = "s1";
 
         Path path = Paths.get("src/main/resources/EpsAuto_transactionFunctions.txt");
         BufferedReader reader = Files.newBufferedReader(path);
