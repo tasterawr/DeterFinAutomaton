@@ -51,7 +51,9 @@ public class NonDetEpsilonAutomaton {
             if (transFunc[state][alphabet.indexOf("eps")].size() != 0){
                 startAutomate(transFunc[state][alphabet.indexOf("eps")], inputSymbols, inputIndex, endStateList);
             }
+        }
 
+        for (int state : currentStateList){
             if (inputIndex == inputSymbols.length){
                 endStateList.addAll(currentStateList);
                 return;

@@ -1,0 +1,10 @@
+begin
+end
+while
+do
+for
+if
+else
+and
+or
+loop
