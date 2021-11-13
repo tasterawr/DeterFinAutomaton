@@ -10,14 +10,10 @@ import java.util.stream.Collectors;
 
 public class LexAnalyser {
     public static int numOfStates;
-    public static List<String> alphabet = new ArrayList<>();
     public static int [][] transFunc;
     public static int startState;
     public static int [] endStates;
     public static List<String> keywords = new ArrayList<>();
-    public static List<String> identifiers = new ArrayList<>();
-    public static List<String> constants = new ArrayList<>();
-    public static List<String> specialSymbols = new ArrayList<>();
     public static Map<Integer, String> stateMap = new HashMap<>();
     public static List<Lexeme> lexemes = new ArrayList<>();
 
@@ -28,19 +24,6 @@ public class LexAnalyser {
         while (reader.ready()){
             keywords.add(reader.readLine());
         }
-    }
-
-    private static void loadAlphabet(){
-        for (int i = 65; i <= 90; i++){
-            alphabet.add(String.valueOf((char)i));
-            alphabet.add(String.valueOf((char)(i + 32)));
-        }
-
-        for (int i=0; i <= 9; i++){
-            alphabet.add(String.valueOf(i));
-        }
-
-        alphabet.addAll(Arrays.asList("> < = + -".split(" ")));
     }
 
     private static void loadStateMap(){
@@ -55,23 +38,23 @@ public class LexAnalyser {
         stateMap.put(8, "Final");
     }
 
-    public static void main(String[] args) {
+    public static void loadAutomaton(){
         try {
             loadKeywords();
-            loadAlphabet();
             loadStateMap();
             prepareData();
         }
         catch (IOException e){
             System.out.println(e.getMessage());
         }
+    }
 
+    public static void main(String[] args) {
+        loadAutomaton();
         System.out.println("\nВведите строку на вход автомата: ");
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine();
         startAutomate(input + " ");
-
-        List list = new ArrayList();
     }
 
     public static void startAutomate(String input){
@@ -91,29 +74,14 @@ public class LexAnalyser {
             currentState = transFunc[currentState][index];
 
             if (currentState == 8){
-                checkLexemeType(lexeme.toString());
                 getLexemeInfo(previousState, lexeme.toString(), lexemeIndex);
                 lexemeIndex = movingIndex;
                 lexeme.setLength(0);
             }
         }
 
-        boolean result = false;
-        for (int i = 0; i < endStates.length; i++){
-            if (currentState == endStates[i]){
-                result = true;
-                break;
-            }
-        }
-
-        if (result){
-            System.out.println("Выражение принято.");
-
-            System.out.println();
-            printLexemes();
-        }
-        else
-            System.out.println("Строка отвергнута.");
+        System.out.println();
+        printLexemes();
     }
 
     public static int getTableIndex(String symbol){
@@ -131,18 +99,6 @@ public class LexAnalyser {
             case "=" -> 6;
             default -> 7;
         };
-    }
-
-    public static void checkLexemeType(String lexeme){
-        for (String s : "+-<>=".split(""))
-            if (lexeme.contains(s)){
-                specialSymbols.add(lexeme);
-                return;
-            }
-        if (Character.isDigit(lexeme.charAt(0)))
-            constants.add(lexeme);
-        else if (!keywords.contains(lexeme))
-            identifiers.add(lexeme.toString());
     }
 
     public static void getLexemeInfo(int previousState, String lexeme, int position){
@@ -168,24 +124,18 @@ public class LexAnalyser {
                 lexemeType = LexemeType.UNDEFINED;
                 break;
             case "Arithmetic":
-                lexemeClass = LexemeClass.SPECIAL_SYMBOL;
+                lexemeClass = LexemeClass.OPERATOR;
                 lexemeType = LexemeType.ARITHMETIC;
                 break;
             case "LessComparison":
-                lexemeClass = LexemeClass.SPECIAL_SYMBOL;
+            case "MoreOrEqualComparison":
+            case "Equality":
+                lexemeClass = LexemeClass.OPERATOR;
                 lexemeType = LexemeType.COMPARISON;
                 break;
             case "Assignment":
-                lexemeClass = LexemeClass.SPECIAL_SYMBOL;
+                lexemeClass = LexemeClass.OPERATOR;
                 lexemeType = LexemeType.ASSIGNMENT;
-                break;
-            case "MoreOrEqualComparison":
-                lexemeClass = LexemeClass.SPECIAL_SYMBOL;
-                lexemeType = LexemeType.COMPARISON;
-                break;
-            case "Equality":
-                lexemeClass = LexemeClass.SPECIAL_SYMBOL;
-                lexemeType = LexemeType.COMPARISON;
                 break;
             default:
                 return;
@@ -221,7 +171,7 @@ public class LexAnalyser {
 
         System.out.println("\nСпециальные символы: ");
         for (Lexeme lex : lexemes.stream()
-                .filter(x -> x.getLexemeClass() == LexemeClass.SPECIAL_SYMBOL)
+                .filter(x -> x.getLexemeClass() == LexemeClass.OPERATOR)
                 .collect(Collectors.toList())){
 
             System.out.println(lex);

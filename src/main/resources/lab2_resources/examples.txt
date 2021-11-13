@@ -1,0 +1,9 @@
+begin do i = i + 1 loop while i < 10 end
+
+do i = i + 1 loop while i < 10 end
+begin i = i + 1 loop while i < 10 end
+begin do i i + 1 loop while i < 10 end
+begin do i = i + 1 loop while < 10 end
+begin do i = i + 1 while i < 10 end
+begin do i = i + 1 loop i < 10 end
+begin do i = i + 1 loop while i < 10

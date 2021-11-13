@@ -8,3 +8,5 @@ else
 and
 or
 loop
+to
+next
