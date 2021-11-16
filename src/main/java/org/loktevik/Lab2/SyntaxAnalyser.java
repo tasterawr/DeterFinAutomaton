@@ -71,7 +71,7 @@ public class SyntaxAnalyser {
             printError("Ключевое слово end ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
         }
-        index++;
+        //index++;
         return true;
     }
 
@@ -105,7 +105,7 @@ public class SyntaxAnalyser {
     public static boolean isRelExpression(){
         if (!isOperand()) return false;
 
-        if (index >= lexemes.size()){
+        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.COMPARISON){
             printError("Оператор сравнения ожидался в позиции " +lexemes.get(index).getPosition());
             return false;
         }

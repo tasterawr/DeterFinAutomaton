@@ -16,5 +16,14 @@ public enum LexemeType {
     FOR,
     TO,
     NEXT,
-    UNTIL
+    UNTIL,
+    IF,
+    ELSE,
+    ELSEIF,
+    THEN,
+    SELECT,
+    CASE,
+    DEFAULT,
+    INPUT,
+    OUTPUT
 }

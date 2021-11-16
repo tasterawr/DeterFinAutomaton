@@ -1,16 +1,17 @@
-package org.loktevik.Lab3;
+package org.loktevik.l2;
 
 import org.loktevik.Lab1.LexAnalyser;
 import org.loktevik.Lab1.Lexeme;
 import org.loktevik.Lab1.LexemeClass;
 import org.loktevik.Lab1.LexemeType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
-public class SyntaxSemanticAnalyser {
+public class SyntaxAnalyser {
     public static List<Lexeme> lexemes = new ArrayList<>();
-    public static List<PostfixEntry> entryList = new ArrayList<>();
     public static int index;
 
     public static void main(String[] args) {
@@ -33,42 +34,52 @@ public class SyntaxSemanticAnalyser {
 
         while(lexemes.get(index).getLexemeType() != LexemeType.END){
             index++;
-            int start = index;
             if (!isWhileStatement()){
                 return;
             }
-            //else index = start;
         }
-
-        printEntryList();
     }
 
     public static boolean isWhileStatement(){
-
-        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.DO){
-            printError("Ключевое слово do ожидалось в позиции " +lexemes.get(index).getPosition());
+        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.IF){
+            printError("Ключевое слово if ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
         }
+
+        index++;
+        if (!isLogExpression()) return false;
+
+        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.THEN){
+            printError("Ключевое слово then ожидалось в позиции " +lexemes.get(index).getPosition());
+            return false;
+        }
+
         index++;
         if (!isStatement()) return false;
 
-        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.LOOP){
-            printError("Ключевое слово loop ожидалось в позиции " +lexemes.get(index).getPosition());
-            return false;
-        }
-
-        int indFirst = entryList.size();
-        index++;
-        if (lexemes.get(index).getLexemeType() != LexemeType.WHILE){
-            printError("Ключевое слово while ожидалось в позиции " +lexemes.get(index).getPosition());
+        if (lexemes.get(index).getLexemeType() != LexemeType.ELSEIF){
+            printError("Ключевое слово elseif ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
         }
 
         index++;
-        if (!isCondition()) return false;
+        if (!isLogExpression()) return false;
 
-        int indJmp = writeCmdPtr(-1);
-        writeCmd(ECmd.JZ);
+        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.THEN){
+            printError("Ключевое слово then ожидалось в позиции " +lexemes.get(index).getPosition());
+            return false;
+        }
+
+        index++;
+        if (!isStatement()) return false;
+
+        if (lexemes.get(index).getLexemeType() != LexemeType.ELSE){
+            printError("Ключевое слово else ожидалось в позиции " +lexemes.get(index).getPosition());
+            return false;
+        }
+
+        index++;
+        if (!isStatement()) return false;
 
         if (index >= lexemes.size()){
             int position = lexemes.get(index-1).getPosition() + lexemes.get(index-1).getValue().length() + 1;
@@ -79,10 +90,6 @@ public class SyntaxSemanticAnalyser {
             printError("Ключевое слово end ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
         }
-        writeCmdPtr(indFirst);
-        int indLast = writeCmd(ECmd.JMP);
-        setCmdPtr(indJmp, indLast+1);
-
         return true;
     }
 
@@ -95,7 +102,6 @@ public class SyntaxSemanticAnalyser {
         while (lexemes.get(index) != null && lexemes.get(index).getLexemeType() == LexemeType.OR){
             index++;
             if (!isLogExpression()) return false;
-            writeCmd(ECmd.OR);
         }
         return true;
     }
@@ -109,7 +115,6 @@ public class SyntaxSemanticAnalyser {
         while (lexemes.get(index) != null && lexemes.get(index).getLexemeType() == LexemeType.AND){
             index++;
             if (!isRelExpression())return false;
-            writeCmd(ECmd.AND);
         }
 
         return true;
@@ -124,15 +129,8 @@ public class SyntaxSemanticAnalyser {
         }
 
         if (lexemes.get(index).getLexemeType() == LexemeType.COMPARISON){
-            ECmd cmd = null;
-            String val = lexemes.get(index).getValue();
-            if (val.equals("<")) cmd = ECmd.CMPL;
-            else if (val.equals("<=")) cmd = ECmd.CMPLE;
-            else if (val.equals("<>")) cmd = ECmd.CMPNE;
-            else if (val.equals("==")) cmd = ECmd.CMPE;
             index++;
             if (!isOperand()) return false;
-            writeCmd(cmd);
         }
         return true;
     }
@@ -146,11 +144,6 @@ public class SyntaxSemanticAnalyser {
             printError("Переменная или константа ожидалась в позиции " +lexemes.get(index).getPosition());
             return false;
         }
-
-        if (lexemes.get(index).getLexemeClass() == LexemeClass.IDENTIFIER)
-            writeVar(index);
-        else
-            writeConst(index);
         index++;
         return true;
     }
@@ -170,7 +163,6 @@ public class SyntaxSemanticAnalyser {
             printError("Идентификатор ожидался в позиции " +lexemes.get(index).getPosition());
             return false;
         }
-        writeVar(index);
 
         index++;
         if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.ASSIGNMENT){
@@ -180,7 +172,6 @@ public class SyntaxSemanticAnalyser {
 
         index++;
         if (!isArithmExpr()) return false;
-        writeCmd(ECmd.SET);
 
         return true;
     }
@@ -189,13 +180,8 @@ public class SyntaxSemanticAnalyser {
         if (!isOperand()) return false;
 
         while (lexemes.get(index).getLexemeType() == LexemeType.ARITHMETIC){
-            ECmd cmd = null;
-            String val = lexemes.get(index).getValue();
-            if (val.equals("+"))  cmd = ECmd.ADD;
-            else if (val.equals("-")) cmd = ECmd.SUB;
             index++;
             if (!isOperand()) return false;
-            writeCmd(cmd);
         }
 
         return true;
@@ -203,47 +189,5 @@ public class SyntaxSemanticAnalyser {
 
     public static void printError(String message){
         System.out.println("Ошибка: " + message);
-    }
-
-    private static int writeCmd(ECmd cmd){
-        PostfixEntry entry = new PostfixEntry();
-        entry.setType(EEntryType.CMD);
-        entry.setCmd(cmd);
-        entryList.add(entry);
-        return entryList.size()-1;
-    }
-
-    private static int writeVar(int index){
-        PostfixEntry variable = new PostfixEntry();
-        variable.setType(EEntryType.VAR);
-        variable.setValue(lexemes.get(index).getValue());
-        entryList.add(variable);
-        return entryList.size()-1;
-    }
-
-    private static int writeConst(int index){
-        PostfixEntry con = new PostfixEntry();
-        con.setType(EEntryType.CONST);
-        con.setValue(lexemes.get(index).getValue());
-        entryList.add(con);
-        return entryList.size()-1;
-    }
-
-    private static int writeCmdPtr(int ptr){
-        PostfixEntry cmdPtr = new PostfixEntry();
-        cmdPtr.setType(EEntryType.CMDPTR);
-        cmdPtr.setCmdPtr(ptr);
-        entryList.add(cmdPtr);
-        return entryList.size()-1;
-    }
-
-    private static void setCmdPtr(int index, int ptr){
-        entryList.get(index).setCmdPtr(ptr);
-    }
-
-    private static void printEntryList(){
-        for (PostfixEntry entry : entryList) {
-            System.out.print(entry + " ");
-        }
     }
 }

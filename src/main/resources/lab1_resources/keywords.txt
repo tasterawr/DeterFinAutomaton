@@ -7,6 +7,17 @@ if
 else
 and
 or
+not
 loop
 to
 next
+if
+else
+elseif
+then
+until
+select
+case
+default
+input
+output

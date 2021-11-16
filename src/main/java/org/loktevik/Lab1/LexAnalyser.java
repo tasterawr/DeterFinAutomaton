@@ -16,6 +16,7 @@ public class LexAnalyser {
     public static List<String> keywords = new ArrayList<>();
     public static Map<Integer, String> stateMap = new HashMap<>();
     public static List<Lexeme> lexemes = new ArrayList<>();
+    public static boolean checkCase;
 
     private static void loadKeywords() throws IOException {
         Path path = Paths.get("src/main/resources/lab1_resources/keywords.txt");
@@ -58,26 +59,34 @@ public class LexAnalyser {
     }
 
     public static void startAutomate(String input){
-        int currentState = startState;
+        int previousState = startState;
         String [] inputArray = input.split("");
         StringBuilder lexeme = new StringBuilder();
         int lexemeIndex = 0;
         int movingIndex = 0;
 
         for (String symbol : inputArray){
-            movingIndex++;
             int index = getTableIndex(symbol);
-            if (index != 7)
-                lexeme.append(symbol);
 
-            int previousState = currentState;
-            currentState = transFunc[currentState][index];
-
-            if (currentState == 8){
+            int nextState = transFunc[previousState][index];
+            if (nextState == 8){
                 getLexemeInfo(previousState, lexeme.toString(), lexemeIndex);
                 lexemeIndex = movingIndex;
                 lexeme.setLength(0);
+                if (index != 9)
+                    lexeme.append(symbol);
+
+                if (transFunc[nextState][index] != 0){
+                    previousState = transFunc[nextState][index];
+                } else{
+                    previousState = nextState;
+                }
+
+            } else{
+                previousState = nextState;
+                lexeme.append(symbol);
             }
+            movingIndex++;
         }
 
         System.out.println();
@@ -97,7 +106,9 @@ public class LexAnalyser {
             case "<" -> 4;
             case ">" -> 5;
             case "=" -> 6;
-            default -> 7;
+            case "*" -> 7;
+            case "/" -> 8;
+            default -> 9;
         };
     }
 
@@ -107,11 +118,13 @@ public class LexAnalyser {
         LexemeClass lexemeClass = null;
         switch (state) {
             case "Identifier":
-                if (keywords.contains(lexeme)) {
+                String lexCheckCase = checkCase ? lexeme : lexeme.toLowerCase(Locale.ROOT);
+                if (keywords.contains(lexCheckCase)) {
                     lexemeClass = LexemeClass.KEYWORD;
                     for (LexemeType lex : LexemeType.values()) {
-                        if (lex.toString().toLowerCase(Locale.ROOT).equals(lexeme)) {
+                        if (lex.toString().toLowerCase(Locale.ROOT).equals(lexCheckCase)) {
                             lexemeType = lex;
+                            break;
                         }
                     }
                 } else {
@@ -179,8 +192,9 @@ public class LexAnalyser {
     }
 
     public static void prepareData() throws IOException {
+        checkCase = true;
         numOfStates = 9;
-        int alphabetLength = 8;
+        int alphabetLength = 10;
         //начальное состояние
         startState = 0;
         //конечное состояние
@@ -190,7 +204,7 @@ public class LexAnalyser {
         BufferedReader reader = Files.newBufferedReader(path);
 
         //матрица переходов
-        transFunc = new int[numOfStates][8]; //размерность массива функции переходов
+        transFunc = new int[numOfStates][alphabetLength]; //размерность массива функции переходов
         for (int i=0; i < numOfStates; i++){
             String[] states = reader.readLine().split(" ");
             for (int j=0; j<alphabetLength; j++){
