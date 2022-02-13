@@ -42,33 +42,32 @@ public class SyntaxAnalyser {
 
     public static boolean isWhileStatement(){
         if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.DO){
-            printError("Ключевое слово do ожидалось в позиции " +lexemes.get(index).getPosition());
+            int position = index >= lexemes.size() ? getAfterIndex() : lexemes.get(index).getPosition();
+            printError("Ключевое слово do ожидалось в позиции " + position);
             return false;
         }
         index++;
         if (!isStatement()) return false;
 
         if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.LOOP){
-            printError("Ключевое слово loop ожидалось в позиции " +lexemes.get(index).getPosition());
+            int position = index >= lexemes.size() ? getAfterIndex() : lexemes.get(index).getPosition();
+            printError("Ключевое слово loop ожидалось в позиции " + position);
             return false;
         }
 
         index++;
-        if (lexemes.get(index).getLexemeType() != LexemeType.WHILE){
-            printError("Ключевое слово while ожидалось в позиции " +lexemes.get(index).getPosition());
+        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.WHILE){
+            int position = index >= lexemes.size() ? getAfterIndex() : lexemes.get(index).getPosition();
+            printError("Ключевое слово while ожидалось в позиции " + position);
             return false;
         }
 
         index++;
         if (!isCondition()) return false;
 
-        if (index >= lexemes.size()){
-            int position = lexemes.get(index-1).getPosition() + lexemes.get(index-1).getValue().length() + 1;
+        if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.END){
+            int position = index >= lexemes.size() ? getAfterIndex() : lexemes.get(index).getPosition();
             printError("Ключевое слово end ожидалось в позиции " + position);
-            return false;
-        }
-        if (lexemes.get(index).getLexemeType() != LexemeType.END){
-            printError("Ключевое слово end ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
         }
         //index++;
@@ -118,11 +117,8 @@ public class SyntaxAnalyser {
     }
 
     public static boolean isOperand(){
-        if (index >= lexemes.size()){
-            return false;
-        }
-        if (lexemes.get(index).getLexemeClass() != LexemeClass.CONSTANT
-        && lexemes.get(index).getLexemeClass() != LexemeClass.IDENTIFIER){
+        if (index >= lexemes.size() || (lexemes.get(index).getLexemeClass() != LexemeClass.CONSTANT
+        && lexemes.get(index).getLexemeClass() != LexemeClass.IDENTIFIER)){
             printError("Переменная или константа ожидалась в позиции " +lexemes.get(index).getPosition());
             return false;
         }
@@ -131,8 +127,8 @@ public class SyntaxAnalyser {
     }
 
     public static boolean isLogicalOp(){
-        if (lexemes.get(index).getLexemeType() != LexemeType.AND
-        && lexemes.get(index).getLexemeType() != LexemeType.OR){
+        if (index >= lexemes.size() || (lexemes.get(index).getLexemeType() != LexemeType.AND
+        && lexemes.get(index).getLexemeType() != LexemeType.OR)){
             printError("Логическая операция ожидалась в позиции " +lexemes.get(index).getPosition());
             return false;
         }
@@ -141,13 +137,15 @@ public class SyntaxAnalyser {
     }
 
     public static boolean isStatement(){
-        if (lexemes.get(index).getLexemeClass() != LexemeClass.IDENTIFIER){
-            printError("Идентификатор ожидался в позиции " +lexemes.get(index).getPosition());
+        if (index >= lexemes.size() || lexemes.get(index).getLexemeClass() != LexemeClass.IDENTIFIER){
+            int position = index >= lexemes.size() ? getAfterIndex() : lexemes.get(index).getPosition();
+            printError("Идентификатор ожидался в позиции " + position);
             return false;
         }
 
         index++;
         if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.ASSIGNMENT){
+            int position = index >= lexemes.size() ? getAfterIndex() : lexemes.get(index).getPosition();
             printError("Присваивание ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
         }
@@ -161,12 +159,22 @@ public class SyntaxAnalyser {
     public static boolean isArithmExpr(){
         if (!isOperand()) return false;
 
-        while (lexemes.get(index).getLexemeType() == LexemeType.ARITHMETIC){
+        while (index < lexemes.size() && lexemes.get(index).getLexemeType() == LexemeType.ARITHMETIC){
             index++;
             if (!isOperand()) return false;
         }
 
         return true;
+    }
+
+    public static int getAfterIndex(){
+        int position = -1;
+        if (index >= lexemes.size())
+            position = lexemes.get(index-1).getPosition() + lexemes.get(index-1).getValue().length() + 1;
+        else
+            position = lexemes.get(index).getPosition();
+
+        return position;
     }
 
     public static void printError(String message){

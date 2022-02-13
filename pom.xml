@@ -6,7 +6,14 @@
 
     <groupId>org.example</groupId>
     <artifactId>DeterFinAutomaton</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>Lapa</module>
+        <module>Ira</module>
+        <module>Sema</module>
+        <module>Yana</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>15</maven.compiler.source>

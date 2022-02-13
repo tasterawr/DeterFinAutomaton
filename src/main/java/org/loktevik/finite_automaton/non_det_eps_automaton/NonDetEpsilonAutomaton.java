@@ -85,7 +85,6 @@ public class NonDetEpsilonAutomaton {
                 writer.write(s);
             }
 
-
             if (result){
                 System.out.println("Строка принята.\n");
                 writer.write(": Строка принята.\n");

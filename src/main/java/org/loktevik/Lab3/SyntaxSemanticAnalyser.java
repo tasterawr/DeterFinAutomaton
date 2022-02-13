@@ -26,25 +26,18 @@ public class SyntaxSemanticAnalyser {
     }
 
     public static void analyse(){
-        if (lexemes.get(index).getLexemeType() != LexemeType.BEGIN){
-            printError("Ключевое слово begin ожидалось в позиции " +lexemes.get(index).getPosition());
-            return;
-        }
 
-        while(lexemes.get(index).getLexemeType() != LexemeType.END){
-            index++;
-            int start = index;
+        while(index < lexemes.size() && lexemes.get(index).getLexemeType() != LexemeType.END){
             if (!isWhileStatement()){
                 return;
             }
-            //else index = start;
         }
 
         printEntryList();
     }
 
     public static boolean isWhileStatement(){
-
+        int indFirst = entryList.size();
         if (index >= lexemes.size() || lexemes.get(index).getLexemeType() != LexemeType.DO){
             printError("Ключевое слово do ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
@@ -56,8 +49,6 @@ public class SyntaxSemanticAnalyser {
             printError("Ключевое слово loop ожидалось в позиции " +lexemes.get(index).getPosition());
             return false;
         }
-
-        int indFirst = entryList.size();
         index++;
         if (lexemes.get(index).getLexemeType() != LexemeType.WHILE){
             printError("Ключевое слово while ожидалось в позиции " +lexemes.get(index).getPosition());
@@ -70,15 +61,6 @@ public class SyntaxSemanticAnalyser {
         int indJmp = writeCmdPtr(-1);
         writeCmd(ECmd.JZ);
 
-        if (index >= lexemes.size()){
-            int position = lexemes.get(index-1).getPosition() + lexemes.get(index-1).getValue().length() + 1;
-            printError("Ключевое слово end ожидалось в позиции " + position);
-            return false;
-        }
-        if (lexemes.get(index).getLexemeType() != LexemeType.END){
-            printError("Ключевое слово end ожидалось в позиции " +lexemes.get(index).getPosition());
-            return false;
-        }
         writeCmdPtr(indFirst);
         int indLast = writeCmd(ECmd.JMP);
         setCmdPtr(indJmp, indLast+1);
@@ -130,6 +112,8 @@ public class SyntaxSemanticAnalyser {
             else if (val.equals("<=")) cmd = ECmd.CMPLE;
             else if (val.equals("<>")) cmd = ECmd.CMPNE;
             else if (val.equals("==")) cmd = ECmd.CMPE;
+            else if (val.equals(">")) cmd = ECmd.CMPG;
+            else if (val.equals(">=")) cmd = ECmd.CMPGE;
             index++;
             if (!isOperand()) return false;
             writeCmd(cmd);
@@ -193,6 +177,8 @@ public class SyntaxSemanticAnalyser {
             String val = lexemes.get(index).getValue();
             if (val.equals("+"))  cmd = ECmd.ADD;
             else if (val.equals("-")) cmd = ECmd.SUB;
+            else if (val.equals("*")) cmd = ECmd.MUL;
+            else if (val.equals("/")) cmd = ECmd.DIV;
             index++;
             if (!isOperand()) return false;
             writeCmd(cmd);

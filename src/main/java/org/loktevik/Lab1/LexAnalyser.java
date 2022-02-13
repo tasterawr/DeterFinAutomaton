@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class LexAnalyser {
+    public static String inputString;
     public static int numOfStates;
     public static int [][] transFunc;
     public static int startState;
@@ -55,6 +56,7 @@ public class LexAnalyser {
         System.out.println("\nВведите строку на вход автомата: ");
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine();
+        inputString = input;
         startAutomate(input + " ");
     }
 
@@ -66,9 +68,15 @@ public class LexAnalyser {
         int movingIndex = 0;
 
         for (String symbol : inputArray){
+            movingIndex++;
             int index = getTableIndex(symbol);
 
             int nextState = transFunc[previousState][index];
+            if (nextState == 0 && (previousState == 0 || previousState == 8)) {
+                lexemeIndex++;
+                continue;
+            }
+
             if (nextState == 8){
                 getLexemeInfo(previousState, lexeme.toString(), lexemeIndex);
                 lexemeIndex = movingIndex;
@@ -86,11 +94,10 @@ public class LexAnalyser {
                 previousState = nextState;
                 lexeme.append(symbol);
             }
-            movingIndex++;
         }
 
         System.out.println();
-        printLexemes();
+//        printLexemes();
     }
 
     public static int getTableIndex(String symbol){
